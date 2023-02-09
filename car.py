@@ -19,7 +19,7 @@ WHITE_CAR = scale_img(pygame.image.load("img/white-car.png"), 0.55)
 
 
 class AbstractCar: #Klasa nadrzędna na klas samochodów użytkowników i samochodu sterowanego przez komputer
-    LAPS = 1
+    LAPS = 5
     def __init__(self, max_vel, rotation_vel):
         self.max_vel=max_vel
         self.vel = 0                    # początkowa prędkość samochodu jest równa 0
