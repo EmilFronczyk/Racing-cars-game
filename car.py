@@ -1,9 +1,6 @@
 import pygame
 import math
 
-# from funtions_and_utilities import scale_img
-# from funtions_and_utilities import blit_rotate_center
-
 def scale_img(img, factor):
     size = round(img.get_width() * factor), round(img.get_height() * factor)
     return pygame.transform.scale(img,size)
@@ -14,23 +11,23 @@ def blit_rotate_center(win, image, top_left, angle):
     win.blit(rotated_image,new_rect.topleft)
 
 RED_CAR = scale_img(pygame.image.load("img/red-car.png"), 0.55)
-GREEN_CAR = pygame.image.load("img/green-car.png")
+GREEN_CAR = scale_img(pygame.image.load("img/green-car.png"), 0.55)
 GREY_CAR = scale_img(pygame.image.load("img/grey-car.png"), 0.55)
-PURPLE_CAR = pygame.image.load("img/purple-car.png")
-WHITE_CAR = pygame.image.load("img/white-car.png")
+PURPLE_CAR = scale_img(pygame.image.load("img/purple-car.png"), 0.55)
+WHITE_CAR = scale_img(pygame.image.load("img/white-car.png"), 0.55)
 
 
 
 class AbstractCar: #Klasa nadrzędna na klas samochodów użytkowników i samochodu sterowanego przez komputer
+    LAPS = 1
     def __init__(self, max_vel, rotation_vel):
-        self.img = self.IMG
         self.max_vel=max_vel
         self.vel = 0                    # początkowa prędkość samochodu jest równa 0
         self.rotation_vel=rotation_vel
         self.angle = 0                   # początkowy kąt skrętu samochodu
         self.x_pos, self.y_pos = self.START_POS
         self.acceleration = 0.01
-        self.lap_number = 1
+        self.lap = 1
     def rotate(self, left=False, right=False):
         if left:
             self.angle += self.rotation_vel
@@ -57,10 +54,6 @@ class AbstractCar: #Klasa nadrzędna na klas samochodów użytkowników i samoch
         self.x_pos -= horizontal
 
 
-    # def reduce_speed(self):
-    #     self.vel = max(self.vel - self.acceleration/2,0)
-    #     self.move()
-
     def brake(self):
         self.vel = self.vel - self.acceleration*4
 
@@ -75,11 +68,19 @@ class AbstractCar: #Klasa nadrzędna na klas samochodów użytkowników i samoch
         self.angle = 0
         self.vel = 0
 
+    def next_lap(self):
+        self.lap += 1
+
+    def race_finished(self):
+        return self.lap > self.LAPS
+
 
 class PlayerCar(AbstractCar):
-    IMG = RED_CAR
-    #START_POS = (180,250)
     START_POS = (200, 200)
+    def __init__(self, max_vel, rotation_vel, img):
+        super().__init__(max_vel,rotation_vel)
+        self.img = img
+
     def reduce_speed(self):
         self.vel = max(self.vel - self.acceleration/2,0)
         self.move()
@@ -88,16 +89,20 @@ class PlayerCar(AbstractCar):
         self.vel = -self.vel/2
         self.move()
 
+    def reset_next_lap(self):
+        self.x_pos, self.y_pos = self.START_POS
+        self.angle = 0
+        self.vel = self.max_vel - 2
+
 class ComputerCar(AbstractCar):
-    IMG = GREY_CAR
-    # START_POS = (150,250)
     START_POS = (170, 200)
 
-    def __init__(self, max_vel, rotation_vel, path=[]):
+    def __init__(self, max_vel, rotation_vel,img, path=[]):
         super().__init__(max_vel,rotation_vel)                                #z klasy AbstrartCar uzywamy init, żeby zaincjować wszystkie potrzebne wartosci
         self.path = path
         self.current_point = 0
         self.vel = 0
+        self.img = img
 
     def draw_points(self,win):
         for point in self.path:
@@ -140,16 +145,10 @@ class ComputerCar(AbstractCar):
         if self.current_point >= len(self.path):
             self.angle = 0
             self.current_point = 0
-            #self.lap_number +=1
-            # if self.lap_number > 2:
-            #     return
         self.calculate_angle()
         self.update_path_point()
         self.vel = min(self.vel + self.acceleration, self.max_vel)
         super().move()
-
-    def next_lap(self, lap):
-        self.vel = self.max_vel = (lap - 1) * 0.3
 
     def reset_next_lap(self,lap):
         self.x_pos, self.y_pos = self.START_POS
